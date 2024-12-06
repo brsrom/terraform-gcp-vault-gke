@@ -1,0 +1,99 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: fmt
+      - task: plan
+
+  fmt:
+    cmd: terraform fmt -recursive
+
+  validate:
+    cmd: terraform validate
+
+  init:
+    deps: ["validate"]
+    cmd: terraform init
+
+  gke:
+    deps: ["init"]
+    cmd: terraform apply -auto-approve -var create_k8s=true
+
+  vault:
+    cmds:
+      - ./scripts/10_gke.sh
+      - terraform apply -auto-approve
+
+  plan:
+    deps: ["init"]
+    cmds:
+      - terraform validate
+      - terraform plan
+
+  output:
+    cmd: terraform output
+
+  destroy:
+    deps: ["vault-uninstall"]
+    cmds:
+      - terraform destroy -auto-approve -var create_k8s=false -target google_container_cluster.autopilot
+      - terraform destroy -auto-approve -var create_k8s=false
+
+  vault-init:
+    cmds:
+      - ./scripts/20_vault_init.sh
+      - ./scripts/30_vault_status.sh
+
+  vault-reinstall:
+    cmds:
+      - task: vault-uninstall
+      - task: vault
+
+  vault-purge:
+    cmds:
+      - helm uninstall vault -n vault
+      - kubectl delete pvc -n vault --all
+    ignore_error: true
+
+  vault-uninstall:
+    cmds:
+     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s.helm_release.vault[0]
+     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s
+    ignore_error: true
+
+  vault-events:
+    cmd: kubectl get events -n vault -w
+
+  vault-logs:
+    cmds:
+      - kubectl wait --for=jsonpath='{.status.phase}'=Running pod --all --namespace vault --timeout=5m
+      - kubectl logs -n vault -l app.kubernetes.io/name=vault -f
+
+  vault-curl:
+    cmd: bash -c 'while true;do curl -sv {{.VAULT_URL}}/v1/sys/health; sleep 5; done'
+    ignore_error: true
+    vars:
+      VAULT_URL:
+        sh: terraform output -raw vault_url
+
+  vault-status:
+    cmd: ./scripts/30_vault_status.sh
+
+  helm-setup:
+    cmds:
+      - helm repo add hashicorp https://helm.releases.hashicorp.com
+      - helm repo update
+  helm-search:
+    cmds:
+      - helm search repo hashicorp/vault
+
+  clean:
+    cmds:
+      - rm -f terraform.tfstate*
+      - rm -f .terraform.lock.hcl
+      - rm -rf .terraform
+      - rm -rf vault-init.json
+    ignore_error: true

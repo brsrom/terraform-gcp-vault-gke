@@ -138,8 +138,12 @@ Upon successful deployment the output of the `make vault-curl` command will be s
 < 
 {"initialized":true,"sealed":false,"standby":false,"performance_standby":false,"replication_performance_mode":"disabled","replication_dr_mode":"disabled","server_time_utc":1703174034,"version":"1.15.4","cluster_name":"vault-cluster-60faa0bd","cluster_id":"1192efbe-f8d0-0c09-8663-26d2d363c896"}
 * Connection #0 to host vault.example.com left intact
-
 ```
+Export the `VAULT_ADDR` and `VAULT_TOKEN` environment variables and check token:
+```bash
+source ./scripts/50_vault_vars.sh
+vault token lookup
+````
 ## Cleanup
 Destroy the Hashicorp Vault and GKE autopilot cluster deployment:
 ```bash
@@ -151,7 +155,7 @@ You can deploy Vault Enterprise Edition by settings the following values in `ter
 ```hcl
 vault_license     = "_LICENSE-STRING_"
 vault_repository  = "hashicorp/vault-enterprise"
-vault_version_tag = "1.15.4-ent"
+vault_version_tag = "1.18.1-ent"
 ```
 
 ## TODO

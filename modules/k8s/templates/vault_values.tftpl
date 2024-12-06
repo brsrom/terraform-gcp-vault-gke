@@ -18,8 +18,8 @@ server:
     secretKey: "${vault_license_secret_key}"
 %{ endif }
 
-  nodeSelector:
-    cloud.google.com/gke-spot: "true"
+#  nodeSelector:
+#    cloud.google.com/gke-spot: "true"
 
   ha:
     enabled: true
