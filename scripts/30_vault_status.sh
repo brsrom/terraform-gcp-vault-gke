@@ -14,9 +14,9 @@ kubectl exec -n vault -ti vault-2 -- vault status
 echo
 kubectl exec -n vault -ti vault-0 -- sh -c "wget -qO- --no-check-certificate https://127.0.0.1:8200/v1/sys/health?perfstandbyok=true\&perfstandbyok=true"
 echo
-curl -skv "$VAULT_ADDR/v1/sys/health?standbyok=true&perfstandbyok=true"
+curl -skv "$VAULT_ADDR/v1/sys/health?standbyok=true&perfstandbyok=true" | jq
 echo
 kubectl exec -n vault -ti vault-0 -- sh -c "VAULT_TOKEN=$VAULT_TOKEN vault operator raft list-peers"
 echo
-echo "VAULT_ADDR: $VAULT_ADDR"
-echo "VAULT_TOKEN: $VAULT_TOKEN"
+echo "export VAULT_ADDR: $VAULT_ADDR"
+echo "export VAULT_TOKEN: $VAULT_TOKEN"

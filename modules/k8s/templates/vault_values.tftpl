@@ -8,13 +8,18 @@ injector:
 server:
   image:
     repository: "${vault_repository}"
+%{if vault_version_tag != "" }
     tag: "${vault_version_tag}"
+%{ endif }
 
 %{if vault_license_secret_name != "" }
   enterpriseLicense:
     secretName: "${vault_license_secret_name}"
     secretKey: "${vault_license_secret_key}"
 %{ endif }
+
+  nodeSelector:
+    cloud.google.com/gke-spot: "true"
 
   ha:
     enabled: true

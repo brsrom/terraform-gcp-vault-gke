@@ -12,7 +12,7 @@ gke: init
 
 vault: init
 	@terraform apply -auto-approve
-	@./scripts/00_gke.sh
+	@./scripts/10_gke.sh
 
 plan: init
 	@terraform validate
@@ -26,8 +26,8 @@ destroy: init vault-uninstall
 	@terraform destroy -auto-approve -var create_k8s=false
 
 vault-init:
-	@./scripts/10_vault_init.sh
-	@./scripts/20_vault_status.sh
+	@./scripts/20_vault_init.sh
+	@./scripts/30_vault_status.sh
 
 vault-reinstall: vault-uninstall vault
 
@@ -50,7 +50,7 @@ vault-curl:
 	@while true;do curl -sv $(shell terraform output -raw vault_url)/v1/sys/health; sleep 5; done
 
 vault-status:
-	@./scripts/20_vault_status.sh
+	@./scripts/30_vault_status.sh
 
 helm-setup:
 	@helm repo add hashicorp https://helm.releases.hashicorp.com

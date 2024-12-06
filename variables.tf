@@ -20,7 +20,7 @@ variable "vault_fqdn" {
 
 variable "vault_chart_version" {
   type    = string
-  default = "0.27.0"
+  default = "0.29.1"
 }
 
 variable "vault_repository" {
@@ -30,7 +30,7 @@ variable "vault_repository" {
 
 variable "vault_version_tag" {
   type    = string
-  default = "1.15.4"
+  default = ""
 }
 
 variable "vault_license" {

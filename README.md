@@ -153,3 +153,7 @@ vault_license     = "_LICENSE-STRING_"
 vault_repository  = "hashicorp/vault-enterprise"
 vault_version_tag = "1.15.4-ent"
 ```
+
+## TODO
+
+- [ ] Add Vault CloudKMS auto-unseal
