@@ -54,14 +54,14 @@ vault_fqdn = "vault.example.com"
 ## Deployment
 Add the Hashicorp helm repository verify it is working:
 ```bash
-make helm-setup
+task helm-setup
 ````
 
 Deploy the GKE Autopilot cluster and HashiCorp Vault helm chart:
 ```bash
-make init
-make gke
-make vault-install
+task init
+task gke
+task vault
 ```
 The output of the above command should be similar to the below:
 ```bash
@@ -87,7 +87,7 @@ To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ## Initialize HashiCorp Vault Cluster
 Automatically initialize the Hashicorp Vault cluster:
 ```bash
-make vault-init
+task vault-init
 ```
 The output of the above command should be similar to the below:
 ```bash
@@ -115,17 +115,17 @@ Once HashiCorp Vault has been deployed and initialized it can take upto 20 minut
 
 In another terminal, watch the HashiCorp Vault namespace events:
 ```bash
-make vault-events
+task vault-events
 ```
 In another terminal, watch the HashiCorp Vault pod logs:
 ```bash
-make vault-logs
+task vault-logs
 ```
 In another terminal, curl the HashiCorp Vault URL:
 ```bash
-make vault-curl
+task vault-curl
 ```
-Upon successful deployment the output of the `make vault-curl` command will be similar to the following:
+Upon successful deployment the output of the `task vault-curl` command will be similar to the following:
 ```bash
 < HTTP/2 200 
 < cache-control: no-store

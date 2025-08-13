@@ -20,3 +20,7 @@ output "vault_url" {
 output "vault_ip_address" {
   value = module.k8s.lb_ip_address
 }
+
+output "unique_id" {
+  value = module.common.unique_id
+}

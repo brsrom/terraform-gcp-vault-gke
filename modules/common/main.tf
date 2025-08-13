@@ -8,7 +8,6 @@ resource "random_string" "suffix" {
   numeric = false
   special = false
   upper   = false
-
 }
 
 data "google_compute_zones" "available" {
@@ -17,3 +16,18 @@ data "google_compute_zones" "available" {
 }
 
 data "google_project" "current" {}
+
+
+resource "google_project_service" "default" {
+  for_each = toset([
+    "cloudkms.googleapis.com",
+    "certificatemanager.googleapis.com",
+    "networksecurity.googleapis.com"
+  ])
+
+  project = var.project
+  service = each.value
+
+  disable_on_destroy = false
+
+}

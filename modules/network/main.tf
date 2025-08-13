@@ -1,3 +1,7 @@
+resource "google_compute_project_default_network_tier" "default" {
+  network_tier = "PREMIUM"
+}
+
 ###
 # Create vpc network
 ###
@@ -12,21 +16,23 @@ resource "google_compute_network" "vpc" {
 }
 
 ###
-# Create subnet
+# Create subnets
 ###
 resource "google_compute_subnetwork" "subnetwork" {
-  name                     = var.subnet.subnet_name
-  ip_cidr_range            = var.subnet.subnet_ip
-  region                   = var.subnet.subnet_region
-  private_ip_google_access = lookup(var.subnet, "subnet_private_access", "false")
+  for_each = var.subnets
+
+  name                     = each.value.subnet_name
+  ip_cidr_range            = each.value.subnet_cidr
+  region                   = each.value.subnet_region
+  private_ip_google_access = lookup(each.value, "subnet_private_access", "false")
 
   dynamic "log_config" {
-    for_each = coalesce(lookup(var.subnet, "subnet_flow_logs", null), false) ? [{
-      aggregation_interval = var.subnet.subnet_flow_logs_interval
-      flow_sampling        = var.subnet.subnet_flow_logs_sampling
-      metadata             = var.subnet.subnet_flow_logs_metadata
-      filter_expr          = var.subnet.subnet_flow_logs_filter
-      metadata_fields      = var.subnet.subnet_flow_logs_metadata_fields
+    for_each = coalesce(lookup(each.value, "subnet_flow_logs", null), false) ? [{
+      aggregation_interval = each.value.subnet_flow_logs_interval
+      flow_sampling        = each.value.subnet_flow_logs_sampling
+      metadata             = each.value.subnet_flow_logs_metadata
+      filter_expr          = each.value.subnet_flow_logs_filter
+      metadata_fields      = each.value.subnet_flow_logs_metadata_fields
     }] : []
     content {
       aggregation_interval = log_config.value.aggregation_interval
@@ -39,9 +45,9 @@ resource "google_compute_subnetwork" "subnetwork" {
 
   network     = google_compute_network.vpc.self_link
   project     = var.project
-  description = lookup(var.subnet, "description", null)
-  purpose     = lookup(var.subnet, "purpose", null)
-  role        = lookup(var.subnet, "role", null)
+  description = lookup(each.value, "description", null)
+  purpose     = lookup(each.value, "purpose", null)
+  role        = lookup(each.value, "role", null)
 
   lifecycle {
     ignore_changes = [
@@ -49,6 +55,7 @@ resource "google_compute_subnetwork" "subnetwork" {
     ]
   }
 }
+
 
 ###
 # Create cloud router and nat gateway

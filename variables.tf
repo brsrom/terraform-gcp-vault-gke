@@ -20,7 +20,7 @@ variable "vault_fqdn" {
 
 variable "vault_chart_version" {
   type    = string
-  default = "0.29.1"
+  default = "0.30.1"
 }
 
 variable "vault_repository" {
@@ -55,4 +55,15 @@ variable "vault_client_cidrs" {
 
 variable "dns_managed_zone_name" {
   type = string
+}
+
+variable "proxy_subnet_cidr" {
+  description = "CIDR range for the proxy-only subnet used by EXTERNAL_MANAGED ALB"
+  type        = string
+  default     = "10.65.0.0/16"
+}
+
+variable "ca_certificate_pem" {
+  type        = string
+  description = "Path to PEM encoded CA certificate for trust config"
 }

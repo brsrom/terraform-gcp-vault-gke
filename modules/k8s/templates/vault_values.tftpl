@@ -6,6 +6,14 @@ injector:
   enabled: false
 
 server:
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    autopilot.gke.io/extended-duration: "true"
+
+  serviceAccount:
+    create: false
+    name: "vault"
+  
   image:
     repository: "${vault_repository}"
 %{if vault_version_tag != "" }
@@ -37,6 +45,16 @@ server:
           tls_disable_client_certs           = true
           address         = "[::]:8200"
           cluster_address = "[::]:8201"
+
+          # Headers from load balancer
+          x_forwarded_for_authorized_addrs = "130.211.0.0/22,35.191.0.0/16"
+          x_forwarded_for_client_cert_header = "x-client-cert-leaf"
+          x_forwarded_for_client_cert_header_decoders = "BASE64"
+          x_forwarded_for_hop_skips = "1"
+
+          telemetry {
+            unauthenticated_metrics_access = "true"
+          }
         }
         
         storage "raft" {
@@ -52,9 +70,22 @@ server:
 
         service_registration "kubernetes" {}
 
+        seal "gcpckms" {
+          project     = "${project}"
+          region      = "${region}"
+          key_ring    = "${kms_key_ring}"
+          crypto_key  = "${kms_crypto_key}"
+        }
+
         api_addr     = "https://HOSTNAME.vault-internal:8200"
         cluster_addr = "https://HOSTNAME.vault-internal:8201"        
         ui           = true
+        log_level    = "${vault_log_level}"
+
+        telemetry {
+          prometheus_retention_time = "1h"
+          disable_hostname = true
+        }
 
     readinessProbe:
       enabled: true
@@ -64,24 +95,13 @@ server:
       path: "/v1/sys/health?standbyok=true"
       initialDelaySeconds: 60
 
-  service:
-    annotations:
-      cloud.google.com/app-protocols: '{"https": "HTTPS"}'
-      cloud.google.com/backend-config: '{"default": "${vault_backend_config}"}'
-      cloud.google.com/neg: '{"ingress": true}'
+#  service:
+#    annotations:
+#      cloud.google.com/app-protocols: '{"https": "HTTPS"}'
+#      cloud.google.com/neg: '{"ingress": true}'
 
   ingress:
-    enabled: true
-
-    hosts:
-      - host: ${fqdn}
-        paths: [/]
-
-    annotations:
-      kubernetes.io/ingress.allow-http: "false"
-      kubernetes.io/ingress.class: "gce"
-      kubernetes.io/ingress.global-static-ip-name: "${lb_ip_address_name}"
-      networking.gke.io/managed-certificates: "${managed_certificate_name}"
+    enabled: false
 
   extraVolumes:
     - type: secret
@@ -90,5 +110,5 @@ server:
       name: tls-ca
 
   extraEnvironmentVars:
-    VAULT_CAPATH: /vault/userconfig/tls-ca/ca.crt
-    VAULT_SKIP_VERIFY: true
+    VAULT_CACERT: /vault/userconfig/tls-ca/ca.crt
+    VAULT_SKIP_VERIFY: "true"

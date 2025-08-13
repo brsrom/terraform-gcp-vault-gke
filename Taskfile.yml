@@ -8,6 +8,16 @@ tasks:
       - task: fmt
       - task: plan
 
+  all:
+    cmds:
+      - task: fmt
+      - task: validate
+      - task: init
+      - task: vault-prereqs
+      - task: vault
+      - task: vault-init
+      - task: vault-config
+
   fmt:
     cmd: terraform fmt -recursive
 
@@ -20,12 +30,18 @@ tasks:
 
   gke:
     deps: ["init"]
-    cmd: terraform apply -auto-approve -var create_k8s=true
+    cmds:
+      - terraform apply -auto-approve -var create_k8s=false
+      - ./scripts/10_gke.sh
 
   vault:
     cmds:
-      - ./scripts/10_gke.sh
       - terraform apply -auto-approve
+
+  vault-prereqs:
+    cmds:
+      - |
+        terraform apply -auto-approve -target module.k8s.helm_release.vault_prereqs[0]
 
   plan:
     deps: ["init"]
@@ -45,7 +61,14 @@ tasks:
   vault-init:
     cmds:
       - ./scripts/20_vault_init.sh
-      - ./scripts/30_vault_status.sh
+
+  vault-config:
+    cmds:
+      - ./scripts/wait-for-vault.sh
+      - ./scripts/40_vault_config.sh
+    env:
+      VAULT_ADDR:
+        sh: terraform output -raw vault_url
 
   vault-reinstall:
     cmds:
@@ -59,10 +82,21 @@ tasks:
     ignore_error: true
 
   vault-uninstall:
+    deps: ["vault-purge"]
     cmds:
      - terraform destroy -auto-approve -var create_k8s=false -target module.k8s.helm_release.vault[0]
-     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s
+#     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s.helm_release.vault_prereqs[0]
+#     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s
     ignore_error: true
+
+  vault-prereqs-uninstall:
+    cmds:
+     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s.helm_release.vault_prereqs[0]
+     - terraform destroy -auto-approve -var create_k8s=false -target module.k8s.kubernetes_namespace_v1.default[0]
+    ignore_error: true
+
+  vault-prereqs-upgrade:
+    cmd: helm upgrade vault-prereqs charts/vault_prereqs --namespace vault --force
 
   vault-events:
     cmd: kubectl get events -n vault -w
@@ -71,6 +105,12 @@ tasks:
     cmds:
       - kubectl wait --for=jsonpath='{.status.phase}'=Running pod --all --namespace vault --timeout=5m
       - kubectl logs -n vault -l app.kubernetes.io/name=vault -f
+
+  vault-active-logs:
+    cmds:
+      - kubectl wait --for=jsonpath='{.status.phase}'=Running pod --all --namespace vault --timeout=5m
+      - kubectl logs -n vault -l vault-active=true -f
+
 
   vault-curl:
     cmd: bash -c 'while true;do curl -sv {{.VAULT_URL}}/v1/sys/health; sleep 5; done'
@@ -86,9 +126,16 @@ tasks:
     cmds:
       - helm repo add hashicorp https://helm.releases.hashicorp.com
       - helm repo update
+
   helm-search:
     cmds:
       - helm search repo hashicorp/vault
+
+  destroy-force:
+    cmds:
+      - terraform state rm -target module.k8s
+      - terraform destroy -auto-approve
+    ignore_error: true
 
   clean:
     cmds:
@@ -97,3 +144,85 @@ tasks:
       - rm -rf .terraform
       - rm -rf vault-init.json
     ignore_error: true
+
+  vault-restart:
+    cmds:
+      - kubectl delete pod -n vault --all
+      - kubectl wait --for=jsonpath='{.status.phase}'=Running pod --all --namespace vault --timeout=5m
+
+  gateway-config:
+    cmds:
+      - |
+        echo "Configuring GCP resources for Vault..."
+        PROJECT_ID=$(terraform output -raw project)
+        UNIQUE_ID=$(terraform output -raw unique_id)
+        
+        # Find and configure HTTPS proxy with ServerTLSPolicy
+        echo "Configuring HTTPS proxy with ServerTLSPolicy..."
+        PROXY_NAME=$(gcloud compute target-https-proxies list --filter="name~'vault-gateway'" --format="value(name)")
+        if [ -z "$PROXY_NAME" ]; then
+          echo "No target HTTPS proxy found for vault-gateway"
+          exit 1
+        fi
+        echo "Found proxy: $PROXY_NAME"
+        
+        gcloud compute target-https-proxies update $PROXY_NAME \
+          --server-tls-policy="projects/$PROJECT_ID/locations/global/serverTlsPolicies/vault-server-tls-policy-$UNIQUE_ID" \
+          --global
+        echo "ServerTLSPolicy attached successfully"
+        
+        echo "GCP resources configured successfully"
+
+  backend-config:
+    cmds:
+      - |
+        echo "Configuring GCP resources for Vault..."
+        PROJECT_ID=$(terraform output -raw project)
+        UNIQUE_ID=$(terraform output -raw unique_id)
+        
+        # Find and configure backend service
+        echo "Configuring backend service..."
+        BACKEND_SERVICE=$(gcloud compute backend-services list --filter="name~'vault-external'" --format="value(name)" --global | head -n1)
+        if [ -z "$BACKEND_SERVICE" ]; then
+          echo "No backend service found for vault-external"
+          exit 1
+        fi
+        echo "Found backend service: $BACKEND_SERVICE"
+        #CERT=$(cat ./labs/cert-auth/client-cert.pem | tr -d '\n')
+        #CERT=$(cat ./labs/cert-auth/client-cert.pem | base64 | jq -Rr @uri)
+        #CERT=$(cat ./labs/cert-auth/client-cert.pem | base64)
+        CERT=$(openssl x509 -in ./labs/cert-auth/client-cert.pem -outform DER | base64)
+        # Configure backend service with custom mTLS headers
+        #--custom-request-header="x-client-cert-leaf:$CERT" \
+        #--custom-request-header="x-client-cert-leaf:{client_cert_leaf}" \
+        gcloud compute backend-services update $BACKEND_SERVICE \
+          --custom-request-header="x-client-cert-leaf:{client_cert_leaf}" \
+          --custom-request-header="x-client-cert-present:{client_cert_present}" \
+          --custom-request-header="x-client-cert-error:{client_cert_error}" \
+          --global
+        echo "Backend service configured"
+  
+
+  clear-server-tls-policy:
+    cmds:
+      - |
+        PROJECT_ID=$(terraform output -raw project)
+        PROXY_NAME=$(gcloud compute target-https-proxies list --filter="name~'vault-gateway'" --format="value(name)")
+        if [ -z "$PROXY_NAME" ]; then
+          echo "No target HTTPS proxy found for vault-gateway"
+          exit 1
+        fi
+        echo "Found proxy: $PROXY_NAME"
+        echo "Clearing ServerTLSPolicy..."
+        gcloud compute target-https-proxies update $PROXY_NAME \
+          --clear-server-tls-policy \
+          --global
+        echo "ServerTLSPolicy cleared successfully"
+
+  vault-exec:
+    cmd: kubectl exec -n vault -it $(kubectl get pods -n vault -l vault-active=true -o jsonpath='{.items[0].metadata.name}') -- sh
+
+  ui:
+    cmds:
+     - open $(terraform output -raw vault_url)
+     - cat vault-init.json | jq -r '.root_token' | pbcopy

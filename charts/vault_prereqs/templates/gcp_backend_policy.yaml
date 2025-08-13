@@ -1,0 +1,14 @@
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: vault-backend-policy
+  namespace: {{ .Values.namespace }}
+spec:
+  default:
+    # connectionDraining:
+    #  drainingTimeoutSec: 300
+    securityPolicy: {{ .Values.cloud_armor_security_policy_name }}
+  targetRef:
+    group: ""
+    kind: Service
+    name: vault-external

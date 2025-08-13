@@ -23,22 +23,27 @@ output "subnet" {
   value       = google_compute_subnetwork.subnetwork
 }
 
-output "subnet_name" {
-  description = "The name of the subnet"
-  value       = google_compute_subnetwork.subnetwork.name
-}
+# output "subnet_name" {
+#   description = "The name of the subnet"
+#   value       = google_compute_subnetwork.subnetwork.name
+# }
 
-output "subnets_ip_cidr_ranges" {
-  description = "The IP CIDR of the subnet"
-  value       = google_compute_subnetwork.subnetwork.ip_cidr_range
-}
+# output "subnets_ip_cidr_ranges" {
+#   description = "The IP CIDR of the subnet"
+#   value       = google_compute_subnetwork.subnetwork.ip_cidr_range
+# }
 
-output "subnet_self_links" {
-  description = "The self_link of the subnet"
-  value       = google_compute_subnetwork.subnetwork.self_link
-}
+# output "subnet_self_links" {
+#   description = "The self_link of the subnet"
+#   value       = google_compute_subnetwork.subnetwork.self_link
+# }
 
-output "subnet_region" {
-  description = "The region of the subnet"
-  value       = google_compute_subnetwork.subnetwork.region
+# output "subnet_region" {
+#   description = "The region of the subnet"
+#   value       = google_compute_subnetwork.subnetwork[0].region
+# }
+
+output "subnetworks" {
+  description = "Map of subnets created"
+  value       = google_compute_subnetwork.subnetwork
 }

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "required": [
+    "cloud_armor_security_policy_name",
+    "fqdn",
+    "certificate_map_name",
+    "namespace",
+    "podmonitor_name",
+    "gcp_project",
+    "trust_config_name"
+  ],
+  "properties": {
+    "cloud_armor_security_policy_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "fqdn": {
+      "type": "string",
+      "pattern": "^[a-z0-9_\\.-]+$"
+    },
+    "podmonitor_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "certificate_map_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "gcp_project": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "trust_config_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    }
+  }
+}

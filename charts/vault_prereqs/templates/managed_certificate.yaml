@@ -1,8 +1,0 @@
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: {{ .Values.managed_certificate_name }}
-  namespace: {{ .Values.namespace }}
-spec:
-  domains:
-    - {{ .Values.fqdn }}

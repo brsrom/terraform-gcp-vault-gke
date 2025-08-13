@@ -9,6 +9,11 @@ module "k8s" {
   vault_license                = var.vault_license
   vault_repository             = var.vault_repository
   vault_version_tag            = var.vault_version_tag
+  project                      = var.project
+  region                       = var.region
+  # vault_log_level              = "DEBUG"
+  dns_managed_zone_name = var.dns_managed_zone_name
+  ca_certificate_pem    = file(var.ca_certificate_pem)
 
   depends_on = [
     google_container_cluster.autopilot

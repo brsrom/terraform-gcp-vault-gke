@@ -6,7 +6,11 @@ variable "create" {
 variable "dns_names" {
   type = list(string)
   default = [
+    "localhost",
     "*.vault-internal",
+    "*.vault-internal.vault.svc.cluster.local",
+    "vault.vault.svc",
+    "vault.vault.svc.cluster.local"
   ]
 }
 
@@ -52,6 +56,16 @@ variable "organization" {
 
 variable "unique_id" {
   type = string
+}
+
+variable "region" {
+  type        = string
+  description = "GCP region for resources"
+}
+
+variable "project" {
+  type        = string
+  description = "GCP project ID for resources"
 }
 
 variable "vault_backend_config" {
@@ -107,4 +121,19 @@ variable "vault_license_secret_key" {
 variable "vault_license" {
   type    = string
   default = null
+}
+
+variable "vault_log_level" {
+  type        = string
+  default     = "INFO"
+  description = "Log level for Vault (TRACE, DEBUG, INFO, WARN, ERROR)"
+}
+
+variable "dns_managed_zone_name" {
+  type = string
+}
+
+variable "ca_certificate_pem" {
+  type        = string
+  description = "PEM encoded CA certificate for trust config"
 }

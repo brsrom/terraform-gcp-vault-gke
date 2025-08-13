@@ -37,10 +37,10 @@ variable "description" {
   default     = null
 }
 
-variable "subnet" {
-  type = object({
+variable "subnets" {
+  type = map(object({
     subnet_name                      = string
-    subnet_ip                        = string
+    subnet_cidr                      = string
     subnet_region                    = string
     subnet_private_access            = optional(string, "false")
     subnet_flow_logs                 = optional(string, "false")
@@ -52,8 +52,8 @@ variable "subnet" {
     description                      = optional(string)
     purpose                          = optional(string)
     role                             = optional(string)
-  })
-  description = "The subnets being created"
+  }))
+  description = "Map of subnets being created"
 }
 
 variable "router_name" {
@@ -67,3 +67,4 @@ variable "router_nat_name" {
   type        = string
   default     = "rn-nat-gateway"
 }
+

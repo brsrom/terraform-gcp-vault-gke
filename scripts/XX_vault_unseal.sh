@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectl wait --for=jsonpath='{.status.phase}'=Running pod --all --namespace vault --timeout=5m
+kubectl wait --for=jsonpath='{.status.phase}'=Running pod -l "app.kubernetes.io/name=vault" --namespace vault --timeout=5m
 
 sleep 3
 
