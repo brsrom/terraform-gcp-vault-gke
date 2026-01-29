@@ -7,8 +7,7 @@
     "certificate_map_name",
     "namespace",
     "podmonitor_name",
-    "gcp_project",
-    "trust_config_name"
+    "gcp_project"
   ],
   "properties": {
     "cloud_armor_security_policy_name": {
@@ -32,10 +31,6 @@
       "pattern": "^[a-z0-9_-]+$"
     },
     "gcp_project": {
-      "type": "string",
-      "pattern": "^[a-z0-9_-]+$"
-    },
-    "trust_config_name": {
       "type": "string",
       "pattern": "^[a-z0-9_-]+$"
     }

@@ -13,7 +13,6 @@ module "k8s" {
   region                       = var.region
   # vault_log_level              = "DEBUG"
   dns_managed_zone_name = var.dns_managed_zone_name
-  ca_certificate_pem    = file(var.ca_certificate_pem)
 
   depends_on = [
     google_container_cluster.autopilot

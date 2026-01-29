@@ -201,11 +201,7 @@ resource "helm_release" "vault_prereqs" {
     {
       name  = "gcp_project"
       value = var.project
-    },
-    {
-      name  = "trust_config_name"
-      value = google_certificate_manager_trust_config.default[0].name
-    },
+    }
   ]
 }
 

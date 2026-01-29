@@ -62,8 +62,3 @@ variable "proxy_subnet_cidr" {
   type        = string
   default     = "10.65.0.0/16"
 }
-
-variable "ca_certificate_pem" {
-  type        = string
-  description = "Path to PEM encoded CA certificate for trust config"
-}

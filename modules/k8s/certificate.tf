@@ -45,29 +45,3 @@ resource "google_dns_record_set" "default" {
   ttl          = 300
   rrdatas      = [google_certificate_manager_dns_authorization.default[0].dns_resource_record[0].data]
 }
-
-resource "google_certificate_manager_trust_config" "default" {
-  count    = var.create ? 1 : 0
-  name     = "vault-trust-config-${var.unique_id}"
-  location = "global"
-
-  # trust_stores {
-  #   trust_anchors {
-  #     pem_certificate = var.ca_certificate_pem
-  #   }
-  # }
-  allowlisted_certificates {
-    pem_certificate = var.ca_certificate_pem
-  }
-}
-
-resource "google_network_security_server_tls_policy" "default" {
-  count    = var.create ? 1 : 0
-  name     = "vault-server-tls-policy-${var.unique_id}"
-  location = "global"
-
-  mtls_policy {
-    client_validation_mode         = "ALLOW_INVALID_OR_MISSING_CLIENT_CERT"
-    client_validation_trust_config = "projects/${data.google_project.current.number}/locations/global/trustConfigs/${google_certificate_manager_trust_config.default[0].name}"
-  }
-}

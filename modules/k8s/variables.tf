@@ -132,8 +132,3 @@ variable "vault_log_level" {
 variable "dns_managed_zone_name" {
   type = string
 }
-
-variable "ca_certificate_pem" {
-  type        = string
-  description = "PEM encoded CA certificate for trust config"
-}
