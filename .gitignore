@@ -21,3 +21,6 @@
 terraform.tfvars
 
 /vault-init.json
+
+### CA private key
+certs/ca.key
