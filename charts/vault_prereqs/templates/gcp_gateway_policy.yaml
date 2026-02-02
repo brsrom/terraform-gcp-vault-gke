@@ -1,0 +1,15 @@
+{{- if and .Values.use_gateway_api .Values.mtls_enabled }}
+apiVersion: networking.gke.io/v1
+kind: GCPGatewayPolicy
+metadata:
+  name: vault-gateway-policy
+  namespace: {{ .Values.namespace }}
+spec:
+  default:
+    allowGlobalAccess: true
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: vault-gateway
+  securityPolicy: {{ .Values.server_tls_policy_name }}
+{{- end }}

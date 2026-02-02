@@ -2,3 +2,10 @@
 backend_config_name: vault-backend-config
 namespace: vault
 podmonitor_name: vault-podmonitor
+
+# Load balancer configuration
+use_gateway_api: true
+
+# mTLS configuration
+mtls_enabled: false
+server_tls_policy_name: ""

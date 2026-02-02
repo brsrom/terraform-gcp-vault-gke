@@ -13,6 +13,9 @@ module "k8s" {
   region                       = var.region
   # vault_log_level              = "DEBUG"
   dns_managed_zone_name = var.dns_managed_zone_name
+  mtls_enabled          = var.mtls_enabled
+  client_ca_pem         = local.client_ca_pem
+  use_gateway_api       = var.use_gateway_api
 
   depends_on = [
     google_container_cluster.autopilot

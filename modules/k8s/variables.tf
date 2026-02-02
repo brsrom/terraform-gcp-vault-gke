@@ -132,3 +132,21 @@ variable "vault_log_level" {
 variable "dns_managed_zone_name" {
   type = string
 }
+
+variable "mtls_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable mTLS for client certificate authentication"
+}
+
+variable "client_ca_pem" {
+  type        = string
+  default     = ""
+  description = "PEM-encoded CA certificate for client certificate validation"
+}
+
+variable "use_gateway_api" {
+  type        = bool
+  default     = true
+  description = "Use GKE Gateway API for load balancing. Set to false for standalone ALB."
+}

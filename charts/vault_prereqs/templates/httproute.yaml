@@ -1,3 +1,4 @@
+{{- if .Values.use_gateway_api }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -13,20 +14,23 @@ spec:
     - path:
         type: PathPrefix
         value: "/"
+{{- if .Values.mtls_enabled }}
     filters:
-#    - type: RequestHeaderModifier
-#      requestHeaderModifier:
-#        add:
-#          - name: "x-client-cert-leaf"
-#            value: "{client_cert_leaf}"
-#          - name: "x-client-cert-chain-verified"
-#            value: "{client_cert_chain_verified}"
-#          - name: "x-client-cert-present"
-#            value: "{client_cert_present}"
-#          - name: "x-client-cert-error"
-#            value: "{client_cert_error}"
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+          - name: "x-client-cert-leaf"
+            value: "{client_cert_leaf}"
+          - name: "x-client-cert-chain-verified"
+            value: "{client_cert_chain_verified}"
+          - name: "x-client-cert-present"
+            value: "{client_cert_present}"
+          - name: "x-client-cert-error"
+            value: "{client_cert_error}"
+{{- end }}
     backendRefs:
     - name: vault-external
       port: 8200
       group: ""
       kind: Service
+{{- end }}

@@ -45,3 +45,29 @@ resource "google_dns_record_set" "default" {
   ttl          = 300
   rrdatas      = [google_certificate_manager_dns_authorization.default[0].dns_resource_record[0].data]
 }
+
+# mTLS configuration for client certificate authentication
+resource "google_certificate_manager_trust_config" "client_ca" {
+  count       = var.create && var.mtls_enabled ? 1 : 0
+  name        = "vault-client-ca-${var.unique_id}"
+  location    = "global"
+  description = "Trust config for Vault client certificate authentication"
+
+  trust_stores {
+    trust_anchors {
+      pem_certificate = var.client_ca_pem
+    }
+  }
+}
+
+resource "google_network_security_server_tls_policy" "mtls" {
+  count       = var.create && var.mtls_enabled ? 1 : 0
+  name        = "vault-mtls-policy-${var.unique_id}"
+  location    = "global"
+  description = "mTLS policy for Vault client certificate authentication"
+
+  mtls_policy {
+    client_validation_mode         = "ALLOW_INVALID_OR_MISSING_CLIENT_CERT"
+    client_validation_trust_config = google_certificate_manager_trust_config.client_ca[0].id
+  }
+}

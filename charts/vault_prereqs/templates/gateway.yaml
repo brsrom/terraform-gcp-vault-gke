@@ -1,3 +1,4 @@
+{{- if .Values.use_gateway_api }}
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: Gateway
 metadata:
@@ -15,3 +16,4 @@ spec:
   addresses:
   - type: NamedAddress
     value: {{ .Values.lb_ip_address_name }}
+{{- end }}

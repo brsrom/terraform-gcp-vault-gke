@@ -1,3 +1,4 @@
+{{- if .Values.use_gateway_api }}
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
@@ -12,3 +13,4 @@ spec:
     group: ""
     kind: Service
     name: vault-external
+{{- end }}

@@ -62,3 +62,21 @@ variable "proxy_subnet_cidr" {
   type        = string
   default     = "10.65.0.0/16"
 }
+
+variable "mtls_enabled" {
+  description = "Enable mTLS for client certificate authentication"
+  type        = bool
+  default     = false
+}
+
+variable "client_ca_pem" {
+  description = "PEM-encoded CA certificate for client certificate validation"
+  type        = string
+  default     = ""
+}
+
+variable "use_gateway_api" {
+  description = "Use GKE Gateway API for load balancing. Set to false for standalone ALB."
+  type        = bool
+  default     = true
+}

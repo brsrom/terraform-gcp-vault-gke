@@ -201,6 +201,18 @@ resource "helm_release" "vault_prereqs" {
     {
       name  = "gcp_project"
       value = var.project
+    },
+    {
+      name  = "mtls_enabled"
+      value = tostring(var.mtls_enabled)
+    },
+    {
+      name  = "server_tls_policy_name"
+      value = var.mtls_enabled ? google_network_security_server_tls_policy.mtls[0].id : ""
+    },
+    {
+      name  = "use_gateway_api"
+      value = tostring(var.use_gateway_api)
     }
   ]
 }
