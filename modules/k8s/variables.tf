@@ -74,11 +74,18 @@ variable "vault_backend_config" {
 }
 
 variable "vault_fqdn" {
-  type = string
+  type        = string
+  description = "FQDN for the main Vault UI/API endpoint"
   validation {
     condition     = length(var.vault_fqdn) <= 63
     error_message = "Vault FQDN max length 63 characters."
   }
+}
+
+variable "vault_mtls_fqdn" {
+  type        = string
+  default     = ""
+  description = "FQDN for the Vault mTLS cert auth endpoint"
 }
 
 variable "managed_certificate_name" {

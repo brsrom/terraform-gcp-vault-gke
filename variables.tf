@@ -15,7 +15,14 @@ variable "subnet_cidr" {
 }
 
 variable "vault_fqdn" {
-  type = string
+  description = "FQDN for the main Vault UI/API endpoint"
+  type        = string
+}
+
+variable "vault_mtls_fqdn" {
+  description = "FQDN for the Vault mTLS cert auth endpoint"
+  type        = string
+  default     = ""
 }
 
 variable "vault_chart_version" {

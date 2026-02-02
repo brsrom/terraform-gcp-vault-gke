@@ -1,6 +1,8 @@
 locals {
   cloud_armour_security_policy_name = "vault-policy-${var.unique_id}"
   lb_name                           = "lb-vault-${var.unique_id}"
+  neg_name                          = "vault-neg-${var.unique_id}"
+  neg_mtls_name                     = "vault-neg-mtls-${var.unique_id}"
 }
 
 data "google_client_config" "current" {}
@@ -241,12 +243,53 @@ resource "helm_release" "vault" {
         kms_key_ring              = google_kms_key_ring.vault[0].name
         kms_crypto_key            = google_kms_crypto_key.vault[0].name
         vault_log_level           = var.vault_log_level
+        use_gateway_api           = var.use_gateway_api
+        neg_name                  = local.neg_name
+        mtls_enabled              = var.mtls_enabled
+        neg_mtls_name             = local.neg_mtls_name
     })}"
   ]
 
   depends_on = [
     helm_release.vault_prereqs
   ]
+}
+
+# Separate Kubernetes service for mTLS cert auth listener (port 8400)
+resource "kubernetes_service_v1" "vault_mtls" {
+  count = var.create && var.mtls_enabled && !var.use_gateway_api ? 1 : 0
+
+  metadata {
+    name      = "vault-mtls"
+    namespace = kubernetes_namespace_v1.default[0].metadata.0.name
+    labels = {
+      "app.kubernetes.io/name"     = "vault"
+      "app.kubernetes.io/instance" = "vault"
+    }
+    annotations = {
+      "cloud.google.com/app-protocols" = jsonencode({ "https-mtls" = "HTTPS" })
+      "cloud.google.com/neg"           = jsonencode({ exposed_ports = { "8400" = { name = local.neg_mtls_name } } })
+    }
+  }
+
+  spec {
+    selector = {
+      "app.kubernetes.io/name"     = "vault"
+      "app.kubernetes.io/instance" = "vault"
+      "component"                  = "server"
+    }
+
+    port {
+      name        = "https-mtls"
+      port        = 8400
+      target_port = 8400
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+
+  depends_on = [helm_release.vault]
 }
 
 resource "google_compute_security_policy" "whitelist" {
