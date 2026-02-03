@@ -59,3 +59,30 @@ resource "google_project_iam_member" "gke" {
   role    = each.value
   member  = "serviceAccount:${google_service_account.gke.email}"
 }
+
+# Firewall rule to allow GCP health checks to reach Vault pods
+# Required for GCP Load Balancer health checks
+resource "google_compute_firewall" "allow_health_check_vault" {
+  count = var.create_k8s && !var.use_gateway_api ? 1 : 0
+
+  name    = "allow-health-check-vault"
+  network = module.network.network.self_link
+  project = var.project
+
+  direction = "INGRESS"
+  priority  = 1000
+
+  # GCP health check source IP ranges
+  source_ranges = [
+    "130.211.0.0/22",
+    "35.191.0.0/16"
+  ]
+
+  # Allow health checks on port 8200 (main API) and 8400 (mTLS endpoint)
+  allow {
+    protocol = "tcp"
+    ports    = var.mtls_enabled ? ["8200", "8400"] : ["8200"]
+  }
+
+  depends_on = [google_container_cluster.autopilot]
+}
